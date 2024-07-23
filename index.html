@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de PDV - Supermercado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #007BFF;
+        }
+
+        .tabs {
+            overflow: hidden;
+            border-bottom: 2px solid #007BFF;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            float: left;
+            padding: 14px 16px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .tab-button:hover {
+            background-color: #ddd;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            margin-bottom: 5px;
+            display: block;
+            font-weight: bold;
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .btn-secondary {
+            background-color: #007bff;
+        }
+
+        .btn-secondary:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: #fff;
+        }
+
+        .summary {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .file-input {
+            margin-top: 10px;
+        }
+
+        .file-input input[type="file"] {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .receipt {
+            display: none;
+        }
+
+        .receipt-content {
+            width: 100%;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            font-family: Arial, sans-serif;
+        }
+
+        .receipt-content h1 {
+            font-size: 20px;
+            text-align: center;
+            color: #007BFF;
+        }
+
+        .receipt-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .receipt-content th, .receipt-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .receipt-content th {
+            background-color: #007BFF;
+            color: #fff;
+        }
+
+        .receipt-content .total {
+            margin-top: 20px;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .receipt, .receipt * {
+                visibility: visible;
+            }
+            .receipt {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sistema de PDV - Supermercado</h1>
+
+        <div class="tabs">
+            <button class="tab-button" onclick="openTab('cadastroItens')">Cadastro de Itens</button>
+            <button class="tab-button" onclick="openTab('estoque')">Estoque</button>
+            <button class="tab-button" onclick="openTab('pdv')">PDV</button>
+            <button class="tab-button" onclick="openTab('vendas')">Vendas</button>
+        </div>
+
+        <div id="cadastroItens" class="tab-content">
+            <h2>Cadastro de Itens</h2>
+            <div class="form-group">
+                <label for="itemCode">Código do Produto:</label>
+                <input type="text" id="itemCode" required>
+
+                <label for="item">Item:</label>
+                <input type="text" id="item" required>
+
+                <label for="quantity">Quantidade:</label>
+                <input type="number" id="quantity" required>
+
+                <label for="price">Preço:</label>
+                <input type="number" step="0.01" id="price" required>
+
+                <button onclick="addItem()">Adicionar Item</button>
+            </div>
+        </div>
+
+        <div id="estoque" class="tab-content">
+            <h2>Estoque</h2>
+            <table id="itemsTable">
+                <tr>
+                    <th>Código do Produto</th>
+                    <th>Item</th>
+                    <th>Quantidade</th>
+                    <th>Preço</th>
+                </tr>
+            </table>
+
+            <div class="file-input">
+                <button class="btn-secondary" onclick="exportToExcel()">Exportar para Excel</button>
+                <input type="file" id="fileInput" onchange="importFromExcel(event)">
+            </div>
+        </div>
+
+        <div id="pdv" class="tab-content">
+            <h2>PDV - Ponto de Venda</h2>
+            <div class="form-group">
+                <label for="pdvItemCode">Código do Produto:</label>
+                <input type="text" id="pdvItemCode" required>
+
+                <label for="pdvQuantity">Quantidade:</label>
+                <input type="number" id="pdvQuantity" required>
+
+                <label for="pdvPrice">Preço:</label>
+                <input type="number" step="0.01" id="pdvPrice" required>
+
+                <button onclick="addToSale()">Adicionar à Venda</button>
+            </div>
+
+            <div class="form-group">
+                <label for="amountReceived">Total Recebido:</label>
+                <input type="number" step="0.01" id="amountReceived" oninput="updateTroco()" required>
+
+                <label for="change">Troco:</label>
+                <input type="number" step="0.01" id="change" readonly>
+            </div>
+
+            <h2>Resumo da Venda</h2>
+            <table id="saleTable">
+                <tr>
+                    <th>Código do Produto</th>
+                    <th>Item</th>
+                    <th>Quantidade</th>
+                    <th>Preço</th>
+                    <th>Total</th>
+                </tr>
+            </table>
+
+            <div class="summary">
+                <h3>Total da Venda: R$ <span id="totalSale">0.00</span></h3>
+                <button onclick="finalizeSale()">Finalizar Venda</button>
+                <button onclick="printReceipt()">Imprimir Comprovante</button>
+            </div>
+
+            <div class="receipt" id="receipt">
+                <div class="receipt-content" id="receiptContent">
+                    <h1>Comprovante Fiscal</h1>
+                    <table>
+                        <tr>
+                            <th>Código do Produto</th>
+                            <th>Item</th>
+                            <th>Quantidade</th>
+                            <th>Preço</th>
+                            <th>Total</th>
+                        </tr>
+                    </table>
+                    <div class="total">
+                        Total: R$ <span id="receiptTotal">0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="vendas" class="tab-content">
+            <h2>Vendas Concluídas</h2>
+            <table id="completedSalesTable">
+                <tr>
+                    <th>ID da Venda</th>
+                    <th>Data</th>
+                    <th>Itens</th>
+                    <th>Total</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        let items = [];
+        let sales = [];
+        let saleItems = [];
+
+        function openTab(tabName) {
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function addItem() {
+            const itemCode = document.getElementById('itemCode').value;
+            const item = document.getElementById('item').value;
+            const quantity = document.getElementById('quantity').value;
+            const price = document.getElementById('price').value;
+
+            items.push({ itemCode, item, quantity, price });
+
+            updateItemsTable();
+            clearForm();
+        }
+
+        function updateItemsTable() {
+            const itemsTable = document.getElementById('itemsTable');
+            itemsTable.innerHTML = `
+                <tr>
+                    <th>Código do Produto</th>
+                    <th>Item</th>
+                    <th>Quantidade</th>
+                    <th>Preço</th>
+                </tr>
+            `;
+
+            items.forEach(item => {
+                const row = itemsTable.insertRow();
+                row.insertCell(0).textContent = item.itemCode;
+                row.insertCell(1).textContent = item.item;
+                row.insertCell(2).textContent = item.quantity;
+                row.insertCell(3).textContent = item.price;
+            });
+        }
+
+        function addToSale() {
+            const pdvItemCode = document.getElementById('pdvItemCode').value;
+            const pdvQuantity = parseInt(document.getElementById('pdvQuantity').value);
+            const pdvPrice = parseFloat(document.getElementById('pdvPrice').value);
+
+            saleItems.push({ pdvItemCode, pdvQuantity, pdvPrice });
+
+            updateSaleTable();
+            updateTotalSale();
+            clearPDVForm();
+        }
+
+        function updateSaleTable() {
+            const saleTable = document.getElementById('saleTable');
+            saleTable.innerHTML = `
+                <tr>
+                    <th>Código do Produto</th>
+                    <th>Item</th>
+                    <th>Quantidade</th>
+                    <th>Preço</th>
+                    <th>Total</th>
+                </tr>
+            `;
+
+            saleItems.forEach(item => {
+                const row = saleTable.insertRow();
+                row.insertCell(0).textContent = item.pdvItemCode;
+                row.insertCell(1).textContent = item.item;
+                row.insertCell(2).textContent = item.pdvQuantity;
+                row.insertCell(3).textContent = item.pdvPrice.toFixed(2);
+                row.insertCell(4).textContent = (item.pdvQuantity * item.pdvPrice).toFixed(2);
+            });
+        }
+
+        function updateTotalSale() {
+            const total = saleItems.reduce((sum, item) => sum + item.pdvQuantity * item.pdvPrice, 0);
+            document.getElementById('totalSale').textContent = total.toFixed(2);
+        }
+
+        function updateTroco() {
+            const total = parseFloat(document.getElementById('totalSale').textContent);
+            const amountReceived = parseFloat(document.getElementById('amountReceived').value) || 0;
+            const change = amountReceived - total;
+
+            document.getElementById('change').value = change.toFixed(2);
+        }
+
+        function finalizeSale() {
+            const saleID = sales.length + 1;
+            const date = new Date().toLocaleDateString();
+            const total = parseFloat(document.getElementById('totalSale').textContent);
+
+            sales.push({ saleID, date, items: saleItems, total });
+
+            updateCompletedSalesTable();
+            saleItems = [];
+            updateSaleTable();
+            updateTotalSale();
+        }
+
+        function updateCompletedSalesTable() {
+            const completedSalesTable = document.getElementById('completedSalesTable');
+            completedSalesTable.innerHTML = `
+                <tr>
+                    <th>ID da Venda</th>
+                    <th>Data</th>
+                    <th>Itens</th>
+                    <th>Total</th>
+                </tr>
+            `;
+
+            sales.forEach(sale => {
+                const row = completedSalesTable.insertRow();
+                row.insertCell(0).textContent = sale.saleID;
+                row.insertCell(1).textContent = sale.date;
+                row.insertCell(2).textContent = sale.items.length;
+                row.insertCell(3).textContent = sale.total.toFixed(2);
+            });
+        }
+
+        function printReceipt() {
+            const receiptContent = document.getElementById('receiptContent');
+            receiptContent.innerHTML = `
+                <h1>Comprovante Fiscal</h1>
+                <table>
+                    <tr>
+                        <th>Código do Produto</th>
+                        <th>Item</th>
+                        <th>Quantidade</th>
+                        <th>Preço</th>
+                        <th>Total</th>
+                    </tr>
+            `;
+
+            saleItems.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.pdvItemCode}</td>
+                    <td>${item.item}</td>
+                    <td>${item.pdvQuantity}</td>
+                    <td>${item.pdvPrice.toFixed(2)}</td>
+                    <td>${(item.pdvQuantity * item.pdvPrice).toFixed(2)}</td>
+                `;
+                receiptContent.querySelector('table').appendChild(row);
+            });
+
+            const total = saleItems.reduce((sum, item) => sum + item.pdvQuantity * item.pdvPrice, 0);
+            receiptContent.innerHTML += `
+                </table>
+                <div class="total">Total: R$ ${total.toFixed(2)}</div>
+            `;
+
+            document.getElementById('receipt').style.display = 'block';
+            window.print();
+            document.getElementById('receipt').style.display = 'none';
+        }
+
+        function exportToExcel() {
+            const ws = XLSX.utils.json_to_sheet(items);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Estoque");
+
+            XLSX.writeFile(wb, "estoque.xlsx");
+        }
+
+        function importFromExcel(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                items = XLSX.utils.sheet_to_json(worksheet);
+
+                updateItemsTable();
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function clearForm() {
+            document.getElementById('itemCode').value = '';
+            document.getElementById('item').value = '';
+            document.getElementById('quantity').value = '';
+            document.getElementById('price').value = '';
+        }
+
+        function clearPDVForm() {
+            document.getElementById('pdvItemCode').value = '';
+            document.getElementById('pdvQuantity').value = '';
+            document.getElementById('pdvPrice').value = '';
+        }
+    </script>
+</body>
+</html>
